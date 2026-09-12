@@ -76,16 +76,24 @@ def parse_curl(raw: str) -> dict:
             continue
 
         if t in ("-H", "--header"):
-            raw_header = tokens[i + 1]
+            header_parts = [tokens[i + 1]] if i + 1 < len(tokens) else []
+            i += 2
+            while i < len(tokens) and not tokens[i].startswith("-") and not tokens[i].startswith("http"):
+                header_parts.append(tokens[i])
+                i += 1
+            raw_header = " ".join(header_parts)
             if ":" in raw_header:
                 k, v = raw_header.split(":", 1)
                 headers[k.strip()] = v.strip()
-            i += 2
             continue
 
         if t in ("-d", "--data", "--data-raw", "--data-binary"):
-            data = tokens[i + 1]
+            data_parts = [tokens[i + 1]] if i + 1 < len(tokens) else []
             i += 2
+            while i < len(tokens) and not (tokens[i].startswith("-") and len(tokens[i]) == 2 and not tokens[i].startswith("--")) and not (data_parts and data_parts[-1].endswith("}")):
+                data_parts.append(tokens[i])
+                i += 1
+            data = " ".join(data_parts)
             continue
 
         if t in ("-u", "--user"):
@@ -141,15 +149,48 @@ def parse_json_body(data: str | None) -> list[dict]:
     """Return [{name, type, example}] for a flat JSON object, or raise."""
     if data is None:
         return []
+    
+    data_clean = data.strip()
+    if (data_clean.startswith('"') and data_clean.endswith('"')) or (data_clean.startswith("'") and data_clean.endswith("'")):
+        data_clean = data_clean[1:-1].strip()
+
+    # Normalize backslash-escaped quotes commonly found in docs or CLI inputs
+    if r'\"' in data_clean:
+        data_clean = data_clean.replace(r'\"', '"')
+    if r"\'" in data_clean:
+        data_clean = data_clean.replace(r"\'", "'")
+
+    obj = None
+    # 1. Try standard JSON
     try:
-        obj = json.loads(data)
+        obj = json.loads(data_clean)
     except json.JSONDecodeError:
+        pass
+
+    # 2. Try ast literal eval (for Python dict / single quotes)
+    if obj is None:
+        try:
+            import ast
+            parsed_ast = ast.literal_eval(data_clean)
+            if isinstance(parsed_ast, dict):
+                obj = parsed_ast
+        except Exception:
+            pass
+
+    # 3. Try recovering unquoted keys/values (common when PowerShell strips nested quotes)
+    if obj is None and (data_clean.startswith("{") and data_clean.endswith("}")):
+        try:
+            fixed = re.sub(r'([{,]\s*)([a-zA-Z0-9_]+)\s*:', r'\1"\2":', data_clean)
+            fixed = re.sub(r':\s*([a-zA-Z0-9_@\.\-\+!]+)(\s*[,}])', r':"\1"\2', fixed)
+            obj = json.loads(fixed)
+        except Exception:
+            pass
+
+    if obj is None or not isinstance(obj, dict):
         raise UnsupportedCurl(
             "the -d body isn't valid JSON (looks form-encoded, e.g. "
             "'key=value'). v1 only supports a JSON object body."
         )
-    if not isinstance(obj, dict):
-        raise UnsupportedCurl("the JSON body isn't a flat object.")
 
     fields = []
     for k, v in obj.items():
@@ -374,17 +415,19 @@ def render_skill(parsed: dict, out_dir: Path) -> Path:
 
 def main():
     ap = argparse.ArgumentParser(description="Convert one curl command into a Claude Skill.")
-    ap.add_argument("curl_command", nargs="?", help="the curl command, quoted. Use '-' to read from stdin.")
+    ap.add_argument("curl_command", nargs="*", help="the curl command, quoted. Use '-' to read from stdin.")
     ap.add_argument("--file", help="read the curl command from a file instead")
     ap.add_argument("--out", default="./skills", help="output directory (default: ./skills)")
     args = ap.parse_args()
 
     if args.file:
         raw = Path(args.file).read_text(encoding="utf-8")
-    elif args.curl_command == "-" or (args.curl_command is None and not sys.stdin.isatty()):
+    elif args.curl_command and args.curl_command[0] == "-":
+        raw = sys.stdin.read()
+    elif not args.curl_command and not sys.stdin.isatty():
         raw = sys.stdin.read()
     elif args.curl_command:
-        raw = args.curl_command
+        raw = " ".join(args.curl_command)
     else:
         ap.error("provide a curl command, --file, or pipe one in via stdin")
 
