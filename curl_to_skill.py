@@ -317,11 +317,12 @@ def main():
     parser = argparse.ArgumentParser(description="Call {service}: {method} {url}")
     for f in FIELDS:
         parser.add_argument(f"--{{f}}", required=True, help=f"value for '{{f}}'")
+    parser.add_argument("--api-key", default=os.environ.get(API_KEY_ENV), help=f"API key (default: from {{API_KEY_ENV}} env var)")
     args = parser.parse_args()
 
-    api_key = os.environ.get(API_KEY_ENV)
+    api_key = args.api_key
     if not api_key:
-        print(f"Error: set the {{API_KEY_ENV}} environment variable first.", file=sys.stderr)
+        print(f"Error: provide --api-key or set the {{API_KEY_ENV}} environment variable first.", file=sys.stderr)
         sys.exit(1)
 
     body = {{f: getattr(args, f) for f in FIELDS}}
