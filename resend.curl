@@ -1,0 +1,4 @@
+curl https://api.resend.com/emails \
+  -H "Authorization: Bearer re_123" \
+  -H "Content-Type: application/json" \
+  -d '{"from": "onboarding@resend.dev", "to": "user@gmail.com", "subject": "Hello"}'
