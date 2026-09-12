@@ -1,0 +1,27 @@
+[
+  {
+    "id": "eval-resend-email",
+    "name": "Resend Create Email Synthesis",
+    "input_file": "examples/resend.curl",
+    "expected_skill_name": "resend-create-email",
+    "expected_status": "success",
+    "expected_env_var": "RESEND_API_KEY",
+    "expected_fields": ["from", "to", "subject", "html"]
+  },
+  {
+    "id": "eval-github-issue",
+    "name": "GitHub Create Issue Synthesis",
+    "input_file": "examples/github.curl",
+    "expected_skill_name": "github-create-issue",
+    "expected_status": "success",
+    "expected_env_var": "GITHUB_API_KEY",
+    "expected_fields": ["title", "body"]
+  },
+  {
+    "id": "eval-stripe-rejection",
+    "name": "Stripe Basic Auth & Form Boundary Rejection",
+    "input_file": "examples/stripe.curl",
+    "expected_status": "rejected",
+    "expected_error_contains": "Basic auth"
+  }
+]

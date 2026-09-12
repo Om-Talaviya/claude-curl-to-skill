@@ -1,7 +1,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-skills/
+.test_skills_output/
 .DS_Store
 .idea/
 .vscode/

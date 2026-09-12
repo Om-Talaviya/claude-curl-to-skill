@@ -1,0 +1,30 @@
+{
+  "name": "claude-curl-to-skill",
+  "version": "1.0.0",
+  "description": "One-shot CLI and Agent Skill that converts any API curl command into a runnable Claude Agent Skill (SKILL.md + executable script) with auth handling and parameter docs.",
+  "author": "Om Talaviya & Open Source Community",
+  "homepage": "https://github.com/Om-Talaviya/curl-to-skill-",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Om-Talaviya/curl-to-skill-.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "claude-skills",
+    "antigravity",
+    "curl",
+    "code-generator",
+    "api-generator",
+    "developer-tools",
+    "cli",
+    "rest-api"
+  ],
+  "skills": [
+    {
+      "name": "curl-to-skill",
+      "path": "skills/curl-to-skill/SKILL.md",
+      "description": "Converts API curl commands into complete, production-ready Claude Agent Skills with natural-language triggers and runnable Python scripts."
+    }
+  ]
+}

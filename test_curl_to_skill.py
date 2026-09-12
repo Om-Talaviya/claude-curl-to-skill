@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent
-OUT = HERE / "skills"
+OUT = HERE / ".test_skills_output"
 
 
 def run(cmd):
