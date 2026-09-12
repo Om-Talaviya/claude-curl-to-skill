@@ -1,7 +1,11 @@
-# curl-to-skill (v1)
+# claude-curl-to-skill
 
 Turn one curl command from API docs into a working Claude Agent Skill —
 a `SKILL.md` plus a runnable script — in one shot.
+
+<p align="center">
+  <img src="assets/demo.gif" alt="curl-to-skill Demo" width="100%" />
+</p>
 
 ```
 curl -H "Authorization: Bearer ..." -d '{...}' https://api.example.com/thing
